@@ -24,9 +24,43 @@
         sessionStorage.setItem('token_expire', dataObj.get("expires_in") * 1000 + Date.now());
         TOKEN = dataObj.get("access_token");
       }
+      
+      document.addEventListener("DOMContentLoaded", () => {
+        const searchForm = document.getElementById("search-form");
+        searchForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target)
+          search(formData.get("search"));
+        });
+        
+        document.getElementById("search-submit").addEventListener("click", (e) => {
+          const formData = new FormData(searchForm)
+          search(formData.get("search"));
+        });
 
+        function search(query) {
+          const val = (query ?? "").trim();
+          console.log(val);
+          if(val.length == 0) {
+            alert("Please enter Playlist ID");
+          }
+          window.location.href = "playlist.html#" + val;
+        }
+      });
+
+      
 
       async function GetPlaylists(cb) {
+        const special = new URL("https://www.googleapis.com/youtube/v3/playlists");
+        special.searchParams.set("part", "snippet,contentDetails");
+        special.searchParams.set("id", `LL,LM`);
+        var response = await (await fetch(special.toString(), {
+          "headers": {
+            "Authorization": "Bearer " + TOKEN
+          }
+        })).json();
+        cb(response);
+
         const playlists = new URL("https://www.googleapis.com/youtube/v3/playlists");
         playlists.searchParams.append("part", "snippet,contentDetails")
         playlists.searchParams.append("mine", "true")
@@ -82,6 +116,12 @@
       <div class="header">
         <a class="round-button" onclick="logOut()">Log Out</a>
       </div>
+      <form id="search-form">
+        <div class="header">
+          <input name="search" type="text" placeholder="Playlist ID" >
+          <a class="round-button" id="search-submit">Search</a>
+        </div>
+      </form>
       <div class="playlists">
 
       </div>

@@ -44,7 +44,6 @@
       }
       
       async function GetVideos(playlistId, cb) {
-        
         const apiUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
         apiUrl.searchParams.append("part", "snippet,contentDetails")
         apiUrl.searchParams.append("playlistId", playlistId)
@@ -72,6 +71,11 @@
         }
 
         GetVideos(playlistId, (data) => {
+          if(data.items === undefined) {
+            document.getElementById("err").classList.remove("hidden");
+            return;
+          }
+
           const listTemplate = document.getElementById("video");
           const container = document.querySelector(".videos");
 
@@ -122,6 +126,9 @@
       <div class="header">
         <a class="round-button" href="app.html">Go Back</a>
         <a class="round-button" onclick="logOut()">Log Out</a>
+      </div>
+      <div id="err" class="hidden">
+        Error while fetching playlist! Go back and try something else.
       </div>
       <div class="videos">
 

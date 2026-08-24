@@ -137,3 +137,7 @@ a {
 .creator:hover{
   color: var(--foreground);
 }
+
+.hidden {
+  display: none;
+}
