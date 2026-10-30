@@ -1,54 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Artis Playlist Viewer</title>
-    <link rel="stylesheet" href="style.css">
-    <script>
-      // shout out to chat gpt for this one
-      function timeAgo(date) {
-        const now = new Date();
-        const diff = (now - date) / 1000; // seconds
 
-        const times = [
-          { unit: 'year', seconds: 60 * 60 * 24 * 365 },
-          { unit: 'month', seconds: 60 * 60 * 24 * 365 / 12 },
-          { unit: 'day', seconds: 60 * 60 * 24 },
-          { unit: 'hour', seconds: 60 * 60 },
-          { unit: 'minute', seconds: 60 },
-          { unit: 'second', seconds: 1 },
-        ];
+<head>
+  <title>Artis Playlist Viewer</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // shout out to chat gpt for this one
+    function timeAgo(date) {
+      const now = new Date();
+      const diff = (now - date) / 1000; // seconds
 
-        const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+      const times = [
+        { unit: 'year', seconds: 60 * 60 * 24 * 365 },
+        { unit: 'month', seconds: 60 * 60 * 24 * 365 / 12 },
+        { unit: 'day', seconds: 60 * 60 * 24 },
+        { unit: 'hour', seconds: 60 * 60 },
+        { unit: 'minute', seconds: 60 },
+        { unit: 'second', seconds: 1 },
+      ];
 
-        for (const { unit, seconds } of times) {
-          const value = Math.floor(diff / seconds);
-          if (value >= 1) {
-            return rtf.format(-value, unit); // negative for past time
-          }
+      const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+
+      for (const { unit, seconds } of times) {
+        const value = Math.floor(diff / seconds);
+        if (value >= 1) {
+          return rtf.format(-value, unit); // negative for past time
         }
-        
-        return rtf.format(0, 'second');
       }
 
+      return rtf.format(0, 'second');
+    }
 
-      function logOut() {
-        sessionStorage.removeItem('yt_token');
-        sessionStorage.removeItem('token_expire');
-        window.location = "./index.html"
-      }
+
+    function logOut() {
+      sessionStorage.removeItem('yt_token');
+      sessionStorage.removeItem('token_expire');
+      window.location = "./index.html"
+    }
+
+    var items = [];
+
+    (() => {
 
       var TOKEN = null;
       const expiry = sessionStorage.getItem('token_expire')
-      if(expiry != null && expiry > Date.now()) {
+      if (expiry != null && expiry > Date.now()) {
         TOKEN = sessionStorage.getItem('yt_token')
       }
-      
+
       async function GetVideos(playlistId, cb) {
         const apiUrl = new URL("https://www.googleapis.com/youtube/v3/playlistItems");
         apiUrl.searchParams.append("part", "snippet,contentDetails")
         apiUrl.searchParams.append("playlistId", playlistId)
         apiUrl.searchParams.append("maxResults", "50")
-        
+
         var nextToken = undefined;
         do {
           var response = await (await fetch(apiUrl.toString(), {
@@ -62,16 +67,16 @@
         } while (nextToken != undefined)
       }
 
-      if(TOKEN == null || TOKEN == undefined) {
+      if (TOKEN == null || TOKEN == undefined) {
         logOut()
       } else {
         const playlistId = window.location.hash.substr(1);
-        if(playlistId.length <= 0) {
+        if (playlistId.length <= 0) {
           window.location = "app.html"
         }
 
         GetVideos(playlistId, (data) => {
-          if(data.items === undefined) {
+          if (data.items === undefined) {
             document.getElementById("err").classList.remove("hidden");
             return;
           }
@@ -79,11 +84,12 @@
           const listTemplate = document.getElementById("video");
           const container = document.querySelector(".videos");
 
-          for(const item of data.items){
+          for (const item of data.items) {
             console.log(item.snippet.position);
             console.log(item);
+            items.push(item)
             const clone = listTemplate.content.cloneNode(true);
-            for(const a of clone.querySelectorAll("a")) {
+            for (const a of clone.querySelectorAll("a")) {
               a.href = "https://youtube.com/watch?v=" + item.snippet.resourceId.videoId;
             }
             const creator = clone.querySelector(".creator");
@@ -91,48 +97,55 @@
             creator.innerText = item.snippet.videoOwnerChannelTitle;
             clone.querySelector(".name").innerText = item.snippet.title;
             //clone.querySelector(".views").innerText = // not provided by api
-            if("high" in item.snippet.thumbnails) 
+            if ("high" in item.snippet.thumbnails)
               clone.querySelector(".thumb").style["background-image"] = `url(${item.snippet.thumbnails.high.url})`
             clone.querySelector(".upload-time").innerText = timeAgo(new Date(item.contentDetails.videoPublishedAt));
+            clone.querySelector(".added-time").innerText = "added " + timeAgo(new Date(item.publishedAt));
             clone.querySelector(".description").innerText = item.snippet.description;
             container.appendChild(clone)
           }
         })
       }
-    </script>
-  </head>
-  <body>
-    <template id="video">
+    })();
+  </script>
+</head>
 
-      <button class="video">
-        <a class="thumb" href="playlist.html#PLID" target="_blank"">
+<body>
+  <template id="video">
+
+    <button class="video">
+      <a class="thumb" href="playlist.html#PLID" target="_blank"">
         </a>
-        <div class="info">
-          <a href="playlist.html#PLID" target="_blank" class="name">Video Name</a>
-          <div class="under-name">
-            <a href="playlist.html#PLID" target="_blank" class="creator">Video Maker</a>
-            <!--
-            •
-            <span class="views">100K</span> views
-            -->
-            •
-            <span class="upload-time">3 years ago</span></div>
-          <span class="description"></span>
+        <div class=" info">
+        <a href="playlist.html#PLID" target="_blank" class="name">Video Name</a>
+        <div class="under-name">
+          <a href="playlist.html#PLID" target="_blank" class="creator">Video Maker</a>
+          <!--
+          •
+          <span class="views">100K</span> views
+          -->
+          •
+          <span class="upload-time">3 years ago</span>
+          •
+          <span class="added-time">added 1 day ago</span>
         </div>
-      </button>
-    </template>
+        <span class="description"></span>
+        </div>
+    </button>
+  </template>
 
-    <div class="center">
-      <div class="header">
-        <a class="round-button" href="app.html">Go Back</a>
-        <a class="round-button" onclick="logOut()">Log Out</a>
-      </div>
-      <div id="err" class="hidden">
-        Error while fetching playlist! Go back and try something else.
-      </div>
-      <div class="videos">
-
-      </div>
+  <div class="center">
+    <div class="header">
+      <a class="round-button" href="app.html">Go Back</a>
+      <a class="round-button" onclick="logOut()">Log Out</a>
     </div>
-  </body>
+    <div id="err" class="hidden">
+      Error while fetching playlist! Go back and try something else.
+    </div>
+    <div class="videos">
+
+    </div>
+  </div>
+</body>
+
 </html>

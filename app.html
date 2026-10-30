@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Arti's Playlist Viewer</title>
-    <link rel="stylesheet" href="style.css">
-    <script>
-      function logOut() {
-        sessionStorage.removeItem('yt_token');
-        sessionStorage.removeItem('token_expire');
-        window.location = "./index.html"
-      }
 
+<head>
+  <title>Arti's Playlist Viewer</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    function logOut() {
+      sessionStorage.removeItem('yt_token');
+      sessionStorage.removeItem('token_expire');
+      window.location = "./index.html"
+    }
+
+    (() => {
       var TOKEN = null;
       const data = window.location.hash;
-      if(data == null || data.length <= 1) {
+      if (data == null || data.length <= 1) {
         const expiry = sessionStorage.getItem('token_expire')
-        if(expiry != null && expiry > Date.now()) {
+        if (expiry != null && expiry > Date.now()) {
           TOKEN = sessionStorage.getItem('yt_token')
         }
       }
@@ -24,7 +26,7 @@
         sessionStorage.setItem('token_expire', dataObj.get("expires_in") * 1000 + Date.now());
         TOKEN = dataObj.get("access_token");
       }
-      
+
       document.addEventListener("DOMContentLoaded", () => {
         const searchForm = document.getElementById("search-form");
         searchForm.addEventListener("submit", (e) => {
@@ -32,7 +34,7 @@
           const formData = new FormData(e.target)
           search(formData.get("search"));
         });
-        
+
         document.getElementById("search-submit").addEventListener("click", (e) => {
           const formData = new FormData(searchForm)
           search(formData.get("search"));
@@ -41,14 +43,14 @@
         function search(query) {
           const val = (query ?? "").trim();
           console.log(val);
-          if(val.length == 0) {
+          if (val.length == 0) {
             alert("Please enter Playlist ID");
           }
           window.location.href = "playlist.html#" + val;
         }
       });
 
-      
+
 
       async function GetPlaylists(cb) {
         const special = new URL("https://www.googleapis.com/youtube/v3/playlists");
@@ -65,7 +67,7 @@
         playlists.searchParams.append("part", "snippet,contentDetails")
         playlists.searchParams.append("mine", "true")
         playlists.searchParams.append("maxResults", "50")
-      
+
         var nextToken = undefined;
         do {
           var response = await (await fetch(playlists.toString(), {
@@ -79,15 +81,15 @@
         } while (nextToken != undefined)
       }
 
-      
-      if(TOKEN == null || TOKEN == undefined) {
+
+      if (TOKEN == null || TOKEN == undefined) {
         logOut()
-      }else{
+      } else {
         GetPlaylists((playlists) => {
           const listTemplate = document.getElementById("playlist");
           const container = document.querySelector(".playlists");
 
-          for(const item of playlists.items){
+          for (const item of playlists.items) {
             const clone = listTemplate.content.cloneNode(true)
             clone.querySelector("a").href = "playlist.html#" + item.id;
             clone.querySelector(".name").innerText = item.snippet.title;
@@ -97,34 +99,37 @@
           }
         })
       }
-    </script>
-  </head>
-  <body>
-    <template id="playlist">
+    })();
+  </script>
+</head>
 
-      <a class="playlist" href="playlist.html#PLID">
-        <div class="thumb">
-        </div>
-        <div class="info">
-          <span class="name">PlayList Name</span>
-          (<span class="item-count">100</span> videos)
-        </div>
-      </a>
+<body>
+  <template id="playlist">
 
-    </template>
-    <div class="center">
-      <div class="header">
-        <a class="round-button" onclick="logOut()">Log Out</a>
+    <a class="playlist" href="playlist.html#PLID">
+      <div class="thumb">
       </div>
-      <form id="search-form">
-        <div class="header">
-          <input name="search" type="text" placeholder="Playlist ID" >
-          <a class="round-button" id="search-submit">Search</a>
-        </div>
-      </form>
-      <div class="playlists">
-
+      <div class="info">
+        <span class="name">PlayList Name</span>
+        (<span class="item-count">100</span> videos)
       </div>
+    </a>
+
+  </template>
+  <div class="center">
+    <div class="header">
+      <a class="round-button" onclick="logOut()">Log Out</a>
     </div>
-  </body>
+    <form id="search-form">
+      <div class="header">
+        <input name="search" type="text" placeholder="Playlist ID">
+        <a class="round-button" id="search-submit">Search</a>
+      </div>
+    </form>
+    <div class="playlists">
+
+    </div>
+  </div>
+</body>
+
 </html>
