@@ -100,7 +100,7 @@
             if ("high" in item.snippet.thumbnails)
               clone.querySelector(".thumb").style["background-image"] = `url(${item.snippet.thumbnails.high.url})`
             clone.querySelector(".upload-time").innerText = timeAgo(new Date(item.contentDetails.videoPublishedAt));
-            clone.querySelector(".added-time").innerText = "added " + timeAgo(new Date(item.publishedAt));
+            clone.querySelector(".added-time").innerText = "added " + timeAgo(new Date(item.snippet.publishedAt));
             clone.querySelector(".description").innerText = item.snippet.description;
             container.appendChild(clone)
           }
